@@ -12,8 +12,8 @@ function create_table_plugin()
 		id mediumint(9) NOT NULL AUTO_INCREMENT,
 		nama_negara varchar(55) NOT NULL,
 		kasus_aktif int NOT NULL,
-		kasus_meninggal int NOT NULL,
-		kasus_sembuh varchar(55) DEFAULT '' NOT NULL,
+		kasus_meninggal int DEFAULT '' NOT NULL,
+		kasus_sembuh int DEFAULT '' NOT NULL,
 		updated_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
 		PRIMARY KEY  (id)
 	) $charset_collate;";

@@ -31,7 +31,7 @@ add_action('save_data_covid_to_database', 'api_covid');
 function run_on_activate()
 {
     if (!wp_next_scheduled('get_data_covid')) {
-        wp_schedule_event(time(), 'every_one_minutes', 'save_data_covid_to_database');
+        wp_schedule_event(time(), 'every_three_minutes', 'save_data_covid_to_database');
     }
 }
 
@@ -84,20 +84,23 @@ function api_covid()
     // return $response;
     $data = json_decode($response);
     if (!empty($data)) {
-        $dataCovid = array();
+        // $dataCovid = array();
         foreach ($data as $key => $value) {
-            $dataCovid[] = array(
-                'nama_negara'       => $value->countryRegion,
-                'kasus_aktif'       => $value->confirmed,
-                'kasus_meninggal'   => $value->deaths,
-                'kasus_sembuh'      => $value->recovered,
-                'updated_at'        => date('Y-m-d H:i:s')
+            $wpdb->insert(
+                $table_name,
+                array(
+                    'nama_negara'       => $value->countryRegion,
+                    'kasus_aktif'       => $value->confirmed,
+                    'kasus_meninggal'   => $value->deaths,
+                    'kasus_sembuh'      => $value->recovered,
+                    'updated_at'        => date('Y-m-d H:i:s')
+                )
             );
         }
-        $wpdb->insert(
-            $table_name,
-            $dataCovid
-        );
+        // $wpdb->insert(
+        //     $table_name,
+        //     $dataCovid
+        // );
 
         // print_r($dataCovid);
     }
