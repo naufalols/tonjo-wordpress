@@ -11,9 +11,9 @@ function create_table_plugin()
     $sql = "CREATE TABLE IF NOT EXISTS $table_name (
 		id mediumint(9) NOT NULL AUTO_INCREMENT,
 		nama_negara varchar(55) NOT NULL,
-		kasus_aktif int DEFAULT '0' NOT NULL,
-		kasus_meninggal int DEFAULT '0' NOT NULL,
-		kasus_sembuh int DEFAULT '0' NOT NULL,
+		kasus_aktif int,
+		kasus_meninggal int,
+		kasus_sembuh int,
 		updated_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
 		PRIMARY KEY  (id)
 	) $charset_collate;";

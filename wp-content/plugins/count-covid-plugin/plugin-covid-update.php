@@ -23,13 +23,13 @@ register_activation_hook(__FILE__, 'save_to_database_cron');
 register_activation_hook(__FILE__, 'run_on_activate');
 
 add_action('save_data_covid_to_database', 'api_covid');
-
+// add_action('the_content', 'api_covid');
 
 
 function run_on_activate()
 {
     if (!wp_next_scheduled('save_data_covid_to_database')) {
-        wp_schedule_event(time(), 'every_three_minutes', 'save_data_covid_to_database');
+        wp_schedule_event(time(), 'every_seven_minutes', 'save_data_covid_to_database');
     }
 }
 
@@ -42,9 +42,9 @@ function setting_cron_get_api($schedules)
         'display'   => __('Every 3 Minutes', 'textdomain')
     );
 
-    $schedules['every_one_minutes'] = array(
-            'interval'  => 60,
-            'display'   => __('Every 1 Minutes', 'textdomain')
+    $schedules['every_seven_minutes'] = array(
+            'interval'  => 420,
+            'display'   => __('Every 7 Minutes', 'textdomain')
     );
 
     return $schedules;
@@ -54,7 +54,7 @@ add_filter('cron_schedules', 'setting_cron_get_api');
 
 
 
-function api_covid($content)
+function api_covid()
 {
     $curl = curl_init();
 
@@ -77,30 +77,63 @@ function api_covid($content)
     $err = curl_error($curl);
 
     curl_close($curl);
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'covidCount';
+
 
     $data = json_decode($response);
 
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'covidCount';
 
     if ($err) {
-        echo "cURL Error #:" . $err;
+        return  "cURL Error #:" . $err;
     } else {
         if (!empty($data)) {
-            foreach ($data as $key => $value) {
-                $wpdb->insert(
-                    $table_name,
-                    array(
-                    'nama_negara'       => $value->countryRegion,
-                    'kasus_aktif'       => $value->confirmed,
-                    'kasus_meninggal'   => $value->deaths,
-                    'kasus_sembuh'      => $value->recovered,
-                    'updated_at'        => date('Y-m-d H:i:s')
-                )
-                );
+            $count = count($data);
+            for ($i=0; $i < $count; $i++) {
+                $nama_negara = ($data[$i]->provinceState == null) ? $data[$i]->countryRegion : $data[$i]->provinceState;
+
+                // $wpdb->insert(
+                //     $table_name,
+                //     array(
+                //             'nama_negara'       => $nama_negara ,
+                //             'kasus_aktif'       => $data[$i]->confirmed,
+                //             'kasus_meninggal'   => $data[$i]->deaths,
+                //             'kasus_sembuh'      => $data[$i]->recovered,
+                //             'updated_at'        => date('Y-m-d H:i:s')
+                //         )
+                // );
+
+                $checkIfExists = $wpdb->get_var("SELECT nama_negara FROM $table_name WHERE nama_negara = '$nama_negara'");
+
+                if ($checkIfExists === null) {
+                    $wpdb->insert(
+                        $table_name,
+                        array(
+                            'nama_negara'       => $nama_negara ,
+                            'kasus_aktif'       => $data[$i]->confirmed,
+                            'kasus_meninggal'   => $data[$i]->deaths,
+                            'kasus_sembuh'      => $data[$i]->recovered,
+                            'updated_at'        => date('Y-m-d H:i:s')
+                        )
+                    );
+                } else {
+                    $wpdb->update(
+                        $table_name,
+                        array(
+                            'nama_negara'       => $nama_negara ,
+                            'kasus_aktif'       => $data[$i]->confirmed,
+                            'kasus_meninggal'   => $data[$i]->deaths,
+                            'kasus_sembuh'      => $data[$i]->recovered,
+                            'updated_at'        => date('Y-m-d H:i:s')
+                        ),
+                        array( 'nama_negara' => $nama_negara ),
+                    );
+                }
             }
         }
     }
+
+    // return $response;
 }
 
 function save_to_database()
